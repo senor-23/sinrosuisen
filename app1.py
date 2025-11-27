@@ -19,7 +19,7 @@ st.write(score)
 
 list = [
     {"latitude":35.05,"longitude":135.76},
-    {"latitude":35.04,"longitide":135.75},
+    {"latitude":35.04,"longitude":135.75},
 ]
 st.map(list)
 
