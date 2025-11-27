@@ -17,7 +17,7 @@ st.write(hobby)
 score = st.slider("この映画を10点満点で評価してください",0,10,5)
 st.write(score)
 
-list=[
+list = [
     {"latitude":35.05,"longitude":135.76},
     {"latitude":35.04,"longitide":135.75},
 ]
