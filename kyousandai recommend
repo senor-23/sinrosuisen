@@ -1,7 +1,6 @@
-# suisen_sisutem.py
 import streamlit as st
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 # Excelファイルを読み込み（同じフォルダに配置）
 df = pd.read_excel("京産大　架空データbyチャッピー　1500.xlsx", sheet_name="Sheet1")
