@@ -1,1 +1,72 @@
+import streamlit as st
+import numpy as np
+import pandas as pd
 
+df = pd.read_excel("京産大　架空データbyチャッピー　1500.xlsx", sheet_name="Sheet1")
+
+# 推薦対象（学科）列、興味・関心、基本情報
+course_columns = ['経済/経済', '経営/マネジメント', '法/法律', '法/法政策', '現代社会/現代社会',
+                  '現代社会/健康スポーツ社会', '国際関係/国際関係', '外国語/英語', '外国語/ヨーロッパ言語',
+                  '外国語/アジア言語', '文化/文化構想', '文化/京都文化', '文化/文化観光', '理/数理科',
+                  '理/物理科', '理/宇宙物理・気象', '情報理工/情報理工', '生命科/先端生命科', '生命科/産業生命科']
+
+interest_columns = ['読書', '音楽', 'スポーツ', '映画・ドラマ', 'ゲーム', 'アニメ・漫画']
+meta_columns = ['性別', '文理', '偏差値']
+
+course_df = df[course_columns]
+features_df = df[interest_columns + meta_columns]
+
+# 協調フィルタリングによる推薦関数
+def recommend_courses(user_features, course_df, features_df, top_n=3, M=4, lr=0.001, k=0.5, E=3000):
+    new_features_df = pd.DataFrame([user_features], columns=features_df.columns)
+    full_features_df = pd.concat([features_df, new_features_df], ignore_index=True)
+
+    dummy_row = pd.Series([np.nan] * course_df.shape[1], index=course_df.columns)
+    full_course_df = pd.concat([course_df, dummy_row.to_frame().T], ignore_index=True)
+
+    n, D = full_course_df.shape
+    U = np.random.normal(1, 0.25, (n, M))
+    V = np.random.normal(1, 0.25, (D, M))
+
+    for _ in range(E):
+        pred = np.dot(U, V.T)
+        error = full_course_df.values - pred
+        error[np.isnan(full_course_df.values)] = 0
+        gradU = 2 * np.dot(error, V) - 2 * k * U
+        gradV = 2 * np.dot(error.T, U) - 2 * k * V
+        U += lr * gradU
+        V += lr * gradV
+
+    final_pred = np.dot(U, V.T)
+    user_pred = pd.Series(final_pred[-1], index=course_df.columns)
+    recs = user_pred.sort_values(ascending=False).head(top_n)
+    return recs
+
+# Streamlit UI
+st.title("京産大 進路推薦システム")
+st.write("あなたの関心や特徴から、最適な学科を推薦します。")
+
+user_features = []
+
+# 関心入力
+st.subheader("1. 興味・関心のあるものを選んでください")
+for col in interest_columns:
+    val = st.checkbox(col)
+    user_features.append(1 if val else 0)
+
+# 属性入力
+st.subheader("2. あなたの属性を入力してください")
+gender = st.selectbox("性別", options=["男性", "女性"])
+bunri = st.selectbox("文理選択", options=["文系", "理系"])
+hensachi = st.slider("現在の偏差値（目安）", 35, 70, 50)
+
+user_features += [0 if gender == "男性" else 1]
+user_features += [0 if bunri == "文系" else 1]
+user_features += [hensachi]
+
+# 推薦実行
+if st.button("進路を推薦する"):
+    recs = recommend_courses(user_features, course_df, features_df, top_n=3)
+  st.subheader("あなたにおすすめの学科")
+    for idx, (name, score) in enumerate(recs.items(), 1):
+        st.write(f"{idx}. {name}（予測スコア: {score:.2f}）")
