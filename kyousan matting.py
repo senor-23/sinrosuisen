@@ -67,6 +67,6 @@ user_features += [hensachi]
 # 推薦実行
 if st.button("進路を推薦する"):
     recs = recommend_courses(user_features, course_df, features_df, top_n=3)
-  st.subheader("あなたにおすすめの学科")
+    st.subheader("あなたにおすすめの学科")
     for idx, (name, score) in enumerate(recs.items(), 1):
         st.write(f"{idx}. {name}（予測スコア: {score:.2f}）")
