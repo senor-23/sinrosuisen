@@ -1,72 +1,82 @@
-import streamlit as st
-import numpy as np
 import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
 
-df = pd.read_excel("京産大　架空データbyチャッピー　1500.xlsx", sheet_name="Sheet1")
+def load_and_preprocess(path):
+    df = pd.read_excel("京産大　架空データbyチャッピー　1500.xlsx", sheet_name="Sheet1")
 
-# 推薦対象（学科）列、興味・関心、基本情報
-course_columns = ['経済/経済', '経営/マネジメント', '法/法律', '法/法政策', '現代社会/現代社会',
-                  '現代社会/健康スポーツ社会', '国際関係/国際関係', '外国語/英語', '外国語/ヨーロッパ言語',
-                  '外国語/アジア言語', '文化/文化構想', '文化/京都文化', '文化/文化観光', '理/数理科',
-                  '理/物理科', '理/宇宙物理・気象', '情報理工/情報理工', '生命科/先端生命科', '生命科/産業生命科']
+    feature_cols = [
+        "性別", "文理", "MBTI", "都道府県", "得意科目"
+    ]
+    target_cols = ["学部", "学科"]
 
-interest_columns = ['読書', '音楽', 'スポーツ', '映画・ドラマ', 'ゲーム', 'アニメ・漫画']
-meta_columns = ['性別', '文理', '偏差値']
+    X = df[feature_cols + ["偏差値"]]
+    y = df[target_cols]
 
-course_df = df[course_columns]
-features_df = df[interest_columns + meta_columns]
+    categorical_cols = feature_cols
+    numeric_cols = ["偏差値"]
 
-# 協調フィルタリングによる推薦関数
-def recommend_courses(user_features, course_df, features_df, top_n=3, M=4, lr=0.001, k=0.5, E=3000):
-    new_features_df = pd.DataFrame([user_features], columns=features_df.columns)
-    full_features_df = pd.concat([features_df, new_features_df], ignore_index=True)
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_cols),
+            ("num", "passthrough", numeric_cols)
+        ]
+    )
 
-    dummy_row = pd.Series([np.nan] * course_df.shape[1], index=course_df.columns)
-    full_course_df = pd.concat([course_df, dummy_row.to_frame().T], ignore_index=True)
+    X_encoded = preprocessor.fit_transform(X)
 
-    n, D = full_course_df.shape
-    U = np.random.normal(1, 0.25, (n, M))
-    V = np.random.normal(1, 0.25, (D, M))
+    return X_encoded, y, preprocessor
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
-    for _ in range(E):
-        pred = np.dot(U, V.T)
-        error = full_course_df.values - pred
-        error[np.isnan(full_course_df.values)] = 0
-        gradU = 2 * np.dot(error, V) - 2 * k * U
-        gradV = 2 * np.dot(error.T, U) - 2 * k * V
-        U += lr * gradU
-        V += lr * gradV
+def recommend_faculty(
+    X_encoded, y, user_vector, k=20
+):
+    similarities = cosine_similarity(user_vector, X_encoded)[0]
+    top_k_idx = similarities.argsort()[-k:][::-1]
 
-    final_pred = np.dot(U, V.T)
-    user_pred = pd.Series(final_pred[-1], index=course_df.columns)
-    recs = user_pred.sort_values(ascending=False).head(top_n)
-    return recs
+    similar_students = y.iloc[top_k_idx]
 
-# Streamlit UI
-st.title("京産大 進路推薦システム")
-st.write("あなたの関心や特徴から、最適な学科を推薦します。")
+    result = (
+        similar_students
+        .value_counts()
+        .reset_index(name="count")
+    )
 
-user_features = []
+    return result
+import streamlit as st
+import pandas as pd
+from src.preprocess import load_and_preprocess
+from src.recommender import recommend_faculty
 
-# 関心入力
-st.subheader("1. 興味・関心のあるものを選んでください")
-for col in interest_columns:
-    val = st.checkbox(col)
-    user_features.append(1 if val else 0)
+st.title("京都産業大学 学部推薦システム")
 
-# 属性入力
-st.subheader("2. あなたの属性を入力してください")
-gender = st.selectbox("性別", options=["男性", "女性"])
-bunri = st.selectbox("文理選択", options=["文系", "理系"])
-hensachi = st.slider("現在の偏差値（目安）", 35, 70, 50)
+# データ読み込み
+X_encoded, y, preprocessor = load_and_preprocess(
+    "data/kyosan_dummy_data.xlsx"
+)
 
-user_features += [0 if gender == "男性" else 1]
-user_features += [0 if bunri == "文系" else 1]
-user_features += [hensachi]
+# 入力UI
+gender = st.selectbox("性別", ["男性", "女性"])
+bunri = st.selectbox("文理", ["文系", "理系"])
+mbti = st.selectbox("MBTI", ["INTJ","INFP","ENTP","ESFJ"])
+pref = st.selectbox("出身地", ["京都府","大阪府","兵庫県"])
+subject = st.selectbox("得意科目", ["国語","数学","英語","理科","社会"])
+hensachi = st.slider("偏差値", 35, 75, 55)
 
-# 推薦実行
-if st.button("進路を推薦する"):
-    recs = recommend_courses(user_features, course_df, features_df, top_n=3)
-    st.subheader("あなたにおすすめの学科")
-    for idx, (name, score) in enumerate(recs.items(), 1):
-        st.write(f"{idx}. {name}（予測スコア: {score:.2f}）")
+if st.button("おすすめ学部を見る"):
+    user_df = pd.DataFrame([{
+        "性別": gender,
+        "文理": bunri,
+        "MBTI": mbti,
+        "都道府県": pref,
+        "得意科目": subject,
+        "偏差値": hensachi
+    }])
+
+    user_vec = preprocessor.transform(user_df)
+    rec = recommend_faculty(X_encoded, y, user_vec)
+
+    st.subheader("あなたにおすすめの学部・学科")
+    st.dataframe(rec.head(5))
+
