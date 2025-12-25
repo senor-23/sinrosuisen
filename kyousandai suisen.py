@@ -23,30 +23,23 @@ pleace_columns = ['北海道','青森','岩手','宮城','秋田','山形','福�
 course_df = df[course_columns]
 features_df = df[interest_columns + meta_columns + character_columns + subject_columns + pleace_columns]
 
-def recommend_courses(user_features, course_df, features_df, top_n=3, M=4, lr=0.001, k=0.5, E=3000):
-    new_features_df = pd.DataFrame([user_features], columns=features_df.columns)
-    full_features_df = pd.concat([features_df, new_features_df], ignore_index=True)
+from sklearn.metrics.pairwise import cosine_similarity
 
-    dummy_row = pd.Series([np.nan] * course_df.shape[1], index=course_df.columns)
-    full_course_df = pd.concat([course_df, dummy_row.to_frame().T], ignore_index=True)
+def recommend_courses(user_features, course_df, features_df, top_n=3):
+    # ユーザー特徴量をベクトル化
+    user_vec = np.array(user_features).reshape(1, -1)
 
-    n, D = full_course_df.shape
-    U = np.random.seed(1, 0.25, (n, M))
-    V = np.random.seed(1, 0.25, (D, M))
-  
-    for _ in range(E):
-    pred = np.dot(U, V.T)
-    error = full_course_df.values - pred
-    error[np.isnan(full_course_df.values)] = 0
-    gradU = 2 * np.dot(error, V) - 2 * k * U
-    gradV = 2 * np.dot(error.T, U) - 2 * k * V
-    U += lr * gradU
-    V += lr * gradV
+    # 既存学生とのコサイン類似度
+    similarities = cosine_similarity(user_vec, features_df.values)[0]
 
-    final_pred = np.dot(U, V.T)
-    user_pred = pd.Series(final_pred[-1], index=course_df.columns)
-    recs = user_pred.sort_values(ascending=False).head(top_n)
-    return recs
+    # 類似度で重み付けした学科スコア
+    scores = np.dot(similarities, course_df.values) / similarities.sum()
+
+    # スコア順に上位学科を返す
+    return pd.Series(scores, index=course_df.columns)\
+             .sort_values(ascending=False)\
+             .head(top_n)
+
 
 st.title("京産大 進路推薦システム")
 st.write("あなたの関心や特徴から、最適な学科を推薦します。")
