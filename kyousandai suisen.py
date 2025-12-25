@@ -31,8 +31,8 @@ def recommend_courses(user_features, course_df, features_df, top_n=3, M=4, lr=0.
     full_course_df = pd.concat([course_df, dummy_row.to_frame().T], ignore_index=True)
 
     n, D = full_course_df.shape
-    U = np.random.normal(1, 0.25, (n, M))
-    V = np.random.normal(1, 0.25, (D, M))
+    U = np.random.seed(1, 0.25, (n, M))
+    V = np.random.seed(1, 0.25, (D, M))
   
     for _ in range(E):
     pred = np.dot(U, V.T)
