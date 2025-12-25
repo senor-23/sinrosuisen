@@ -23,7 +23,6 @@ pleace_columns = ['北海道','青森','岩手','宮城','秋田','山形','福�
 course_df = df[course_columns]
 features_df = df[interest_columns + meta_columns + character_columns + subject_columns + pleace_columns]
 
-from sklearn.metrics.pairwise import cosine_similarity
 
 def recommend_courses(user_features, course_df, features_df, top_n=3):
     # ユーザー特徴量をベクトル化
