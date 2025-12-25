@@ -34,7 +34,7 @@ def recommend_courses(user_features, course_df, features_df, top_n=3, M=4, lr=0.
     U = np.random.normal(1, 0.25, (n, M))
     V = np.random.normal(1, 0.25, (D, M))
   
-for _ in range(E):
+    for _ in range(E):
     pred = np.dot(U, V.T)
     error = full_course_df.values - pred
     error[np.isnan(full_course_df.values)] = 0
