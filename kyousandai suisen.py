@@ -62,10 +62,21 @@ st.subheader("2. あなたの属性を入力してください")
 gender = st.selectbox("性別", options=["男性", "女性"])
 bunri = st.selectbox("文理選択", options=["文系", "理系"])
 hensachi = st.slider("現在の偏差値（目安）", 35, 70, 50)
+mbti = st.selectbox("MBTI", option=["ISTJ(ロジスティシャン)","ISFJ(擁護者)","INFJ(提唱者)","INTJ(建築家)","ISTP(巨匠)",
+                     "ISFP(冒険家)","INFP(仲介者)","INTP(論理学者)","ESTP(起業家)","ESFP(エンターテイナー)",
+                     "ENFP(運動家)","ENTP(討論者)","ESTJ(幹部)","ESFJ(領事)","ENFJ(主人公)","ENTJ(指揮官)"])
+kamoku = st.selectbox("国語","数学","英語","理科","社会")
+shusshin = st.selectbox("北海道","青森","岩手","宮城","秋田","山形","福島","茨城","栃木","群馬","埼玉","千葉","東京",
+                  "神奈川","新潟","富山","石川","福井","山梨","長野","岐阜","静岡","愛知","三重","滋賀","京都",
+                  "大阪","兵庫","奈良","和歌山","鳥取","島根","岡山","広島","山口","徳島","香川","愛媛","高知",
+                  "福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島","沖縄")
 
 user_features += [0 if gender == "男性" else 1]
 user_features += [0 if bunri == "文系" else 1]
 user_features += [hensachi]
+user_features += [mbti]
+user_features += [kamoku]
+user_features += [shusshin]
 
 if st.button("進路を推薦する"):
     recs = recommend_courses(user_features, course_df, features_df, top_n=3)
