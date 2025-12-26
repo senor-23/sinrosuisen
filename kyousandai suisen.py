@@ -26,7 +26,7 @@ course_df = df[course_columns]
 features_df = df[interest_columns + meta_columns + character_columns + subject_columns + pleace_columns]
 
 
-def recommend_courses(user_features, course_df, features_df, top_n=3):
+def recommend_courses(user_features, course_df, features_df, top_n=5):
     assert len(user_features) == features_df.shape[1]
 
     user_vec = np.array(user_features).reshape(1, -1)
