@@ -27,19 +27,29 @@ features_df = df[interest_columns + meta_columns + character_columns + subject_c
 
 
 def recommend_courses(user_features, course_df, features_df, top_n=3):
-    # ユーザー特徴量をベクトル化
+    assert len(user_features) == features_df.shape[1]
+
     user_vec = np.array(user_features).reshape(1, -1)
 
-    # 既存学生とのコサイン類似度
-    similarities = cosine_similarity(user_vec, features_df.values)[0]
+    similarities = cosine_similarity(
+        user_vec, features_df.values
+    )[0]
 
-    # 類似度で重み付けした学科スコア
-    scores = np.dot(similarities, course_df.values) / similarities.sum()
+    sim_sum = similarities.sum()
+    if sim_sum == 0:
+        return pd.Series(
+            np.zeros(course_df.shape[1]),
+            index=course_df.columns
+        )
 
-    # スコア順に上位学科を返す
-    return pd.Series(scores, index=course_df.columns)\
-             .sort_values(ascending=False)\
-             .head(top_n)
+    scores = np.dot(similarities, course_df.values) / sim_sum
+
+    return (
+        pd.Series(scores, index=course_df.columns)
+        .sort_values(ascending=False)
+        .head(top_n)
+    )
+
 
 
 st.title("京産大 進路推薦システム")
@@ -67,7 +77,7 @@ shusshin = st.selectbox("出身地", options=["北海道","青森","岩手","宮
 
 user_features += [0 if gender == "男性" else 1]
 user_features += [0 if bunri == "文系" else 1]
-user_features += [hensachi]
+user_features += [hensachi / 100]
 for col in character_columns:
     user_features.append(1 if mbti == col else 0)
 for col in subject_columns:
