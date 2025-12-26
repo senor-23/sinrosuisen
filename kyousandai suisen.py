@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
 
 
 df = pd.read_excel("excel1.xlsx", sheet_name="Sheet1")
