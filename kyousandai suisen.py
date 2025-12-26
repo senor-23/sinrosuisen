@@ -82,13 +82,28 @@ mbti = st.selectbox("MBTI", options=["ISTJ(ロジスティシャン)","ISFJ(擁�
 kamoku = st.selectbox("得意科目", options=["国語","数学","英語","理科","社会"])
 
 
-user_features += [0 if gender == "男性" else 1]
-user_features += [0 if bunri == "文系" else 1]
-user_features += [hensachi / 100]
+user_features = []
+
+# 興味
+for col in interest_columns:
+    val = st.checkbox(col)
+    user_features.append((1 if val else 0) * interest_w)
+
+# 属性
+user_features += [
+    (0 if gender == "男性" else 1) * meta_w,
+    (0 if bunri == "文系" else 1) * meta_w,
+    (hensachi / 100) * meta_w
+]
+
+# MBTI
 for col in character_columns:
-    user_features.append(1 if mbti == col else 0)
+    user_features.append((1 if mbti == col else 0) * mbti_w)
+
+# 得意科目
 for col in subject_columns:
-    user_features.append(1 if kamoku == col else 0)
+    user_features.append((1 if kamoku == col else 0) * subject_w)
+
 
 
 
