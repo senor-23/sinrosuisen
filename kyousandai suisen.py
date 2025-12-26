@@ -26,13 +26,13 @@ interest_w = 3.0
 subject_w = 3.0
 mbti_w = 1.0
 meta_w = 1.0
-place_w = 0.2
+
 
 features_df[interest_columns] *= interest_w
 features_df[subject_columns] *= subject_w
 features_df[character_columns] *= mbti_w
 features_df[meta_columns] *= meta_w
-features_df[pleace_columns] *= place_w
+
 
 
 
