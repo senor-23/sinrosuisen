@@ -25,6 +25,20 @@ pleace_columns = ['北海道','青森','岩手','宮城','秋田','山形','福�
 course_df = df[course_columns]
 features_df = df[interest_columns + meta_columns + character_columns + subject_columns + pleace_columns]
 
+# ===== 重み設定 =====
+interest_w = 3.0
+subject_w = 3.0
+mbti_w = 1.0
+meta_w = 1.0
+place_w = 0.2
+
+features_df[interest_columns] *= interest_w
+features_df[subject_columns] *= subject_w
+features_df[character_columns] *= mbti_w
+features_df[meta_columns] *= meta_w
+features_df[pleace_columns] *= place_w
+
+
 
 def recommend_courses(user_features, course_df, features_df, top_n=5):
     assert len(user_features) == features_df.shape[1]
