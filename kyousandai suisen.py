@@ -69,7 +69,7 @@ user_features = []
 
 st.subheader("1. 興味・関心のあるものを選んでください")
 for col in interest_columns:
-    val = st.checkbox(col)
+    val = st.checkbox(col, key=f"checkbox_{col}")
     user_features.append(1 if val else 0)
 
 st.subheader("2. あなたの属性を入力してください")
