@@ -86,7 +86,7 @@ user_features = []
 
 # 興味
 for col in interest_columns:
-    val = st.checkbox(col)
+    val = st.checkbox(col, key=f"checkbox_{col}")
     user_features.append((1 if val else 0) * interest_w)
 
 # 属性
