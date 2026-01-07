@@ -49,7 +49,7 @@ alpha = st.sidebar.slider("特徴量 vs SVD", 0.0, 1.0, 0.6)
 # ===============================
 # データ分割
 # ===============================
-course_df = df[bunkei_columns + rikei_columns]
+course_df = df[bunkei_courses_columns + rikei_courses_columns]
 features_df = df[
     interest_columns + meta_columns + character_columns + subject_columns
 ].copy()
