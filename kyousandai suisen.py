@@ -66,34 +66,27 @@ latent_course = svd.components_
 # ===============================
 # 推薦関数
 # ===============================
-alpha = 0.7  # ← 特徴量重視度（0〜1）
-
 def recommend_courses(user_features, top_n=5):
     user_vec = np.array(user_features).reshape(1, -1)
 
-    # 正規化（超重要）
     user_vec = user_vec / (np.linalg.norm(user_vec) + 1e-8)
-    features_norm = features_df.values / (
-        np.linalg.norm(features_df.values, axis=1, keepdims=True) + 1e-8
+    X = features_df.values
+    X = X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-8)
+
+    similarities = cosine_similarity(user_vec, X)[0]
+
+    # 上位K人だけ使う（最重要）
+    top_k = 50
+    top_idx = np.argsort(similarities)[-top_k:]
+    top_sim = similarities[top_idx]
+
+    scores = (
+        np.dot(top_sim, course_df.values[top_idx])
+        / top_sim.sum()
     )
 
-    # コサイン類似度
-    similarities = cosine_similarity(user_vec, features_norm)[0]
-
-    # 類似度の強調（差を出す）
-    similarities = similarities ** 3
-
-    # 特徴量ベース推薦
-    feature_score = np.dot(similarities, course_df.values) / similarities.sum()
-
-    # 協調（SVDの簡略代替）
-    collaborative_score = course_df.mean(axis=0).values
-
-    # ハイブリッド
-    final_score = alpha * feature_score + (1 - alpha) * collaborative_score
-
     return (
-        pd.Series(final_score, index=course_columns)
+        pd.Series(scores, index=course_columns)
         .sort_values(ascending=False)
         .head(top_n)
     )
