@@ -70,7 +70,7 @@ latent_course = svd.components_
 # ===============================
 # 推薦関数
 # ===============================
-def recommend_courses(user_features, top_n=5):
+def recommend_courses(user_features, bunri, top_n=5):
     user_vec = np.array(user_features).reshape(1, -1)
 
     user_vec = user_vec / (np.linalg.norm(user_vec) + 1e-8)
@@ -79,7 +79,6 @@ def recommend_courses(user_features, top_n=5):
 
     similarities = cosine_similarity(user_vec, X)[0]
 
-    # 上位K人だけ使う（最重要）
     top_k = 50
     top_idx = np.argsort(similarities)[-top_k:]
     top_sim = similarities[top_idx]
@@ -89,12 +88,15 @@ def recommend_courses(user_features, top_n=5):
         / top_sim.sum()
     )
 
-    return (
-        pd.Series(scores, index=course_columns)
-        .sort_values(ascending=False)
-        .head(top_n)
-    )
+    score_series = pd.Series(scores, index=course_columns)
 
+    # ★ 文理フィルタ（核心）
+    if bunri == "文系":
+        score_series = score_series[bunkei_courses]
+    else:
+        score_series = score_series[rikei_courses]
+
+    return score_series.sort_values(ascending=False).head(top_n)
 
 # ===============================
 # UI
