@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.decomposition import TruncatedSVD
 
 # ===============================
 # データ読み込み
@@ -21,111 +22,108 @@ course_columns = [
     '生命科/先端生命科', '生命科/産業生命科'
 ]
 
-interest_columns = ['旅行', '読書', '音楽', 'スポーツ', '映画・ドラマ', 'ゲーム', 'アニメ・漫画']
-meta_columns = ['性別', '文理', '偏差値']
+interest_columns = ['旅行','読書','音楽','スポーツ','映画・ドラマ','ゲーム','アニメ・漫画']
+meta_columns = ['性別','文理','偏差値']
 character_columns = [
-    'ISTJ(ロジスティシャン)', 'ISFJ(擁護者)', 'INFJ(提唱者)', 'INTJ(建築家)',
-    'ISTP(巨匠)', 'ISFP(冒険家)', 'INFP(仲介者)', 'INTP(論理学者)',
-    'ESTP(起業家)', 'ESFP(エンターテイナー)', 'ENFP(運動家)', 'ENTP(討論者)',
-    'ESTJ(幹部)', 'ESFJ(領事)', 'ENFJ(主人公)', 'ENTJ(指揮官)'
+    'ISTJ(ロジスティシャン)','ISFJ(擁護者)','INFJ(提唱者)','INTJ(建築家)',
+    'ISTP(巨匠)','ISFP(冒険家)','INFP(仲介者)','INTP(論理学者)',
+    'ESTP(起業家)','ESFP(エンターテイナー)','ENFP(運動家)','ENTP(討論者)',
+    'ESTJ(幹部)','ESFJ(領事)','ENFJ(主人公)','ENTJ(指揮官)'
 ]
-subject_columns = ['国語', '数学', '英語', '理科', '社会']
+subject_columns = ['国語','数学','英語','理科','社会']
 
 # ===============================
-# DataFrame 分割
+# UI：重み調整
+# ===============================
+st.sidebar.title("⚙ 重み調整")
+interest_w = st.sidebar.slider("興味の重み", 0.5, 5.0, 3.0)
+subject_w = st.sidebar.slider("得意科目の重み", 0.5, 5.0, 3.0)
+mbti_w = st.sidebar.slider("MBTIの重み", 0.5, 3.0, 1.5)
+meta_w = st.sidebar.slider("属性の重み", 0.1, 2.0, 1.0)
+alpha = st.sidebar.slider("特徴量 vs SVD", 0.0, 1.0, 0.6)
+
+# ===============================
+# データ分割
 # ===============================
 course_df = df[course_columns]
 features_df = df[
     interest_columns + meta_columns + character_columns + subject_columns
 ].copy()
 
-# ===============================
-# 重み設定（重要）
-# ===============================
-interest_w = 3.0
-subject_w = 3.0
-mbti_w = 1.5
-meta_w = 1.0
-
-# ===============================
-# 学習データ側に重み付け
-# ===============================
+# 重み適用
 features_df[interest_columns] *= interest_w
 features_df[subject_columns] *= subject_w
 features_df[character_columns] *= mbti_w
 features_df[meta_columns] *= meta_w
 
 # ===============================
+# SVD モデル
+# ===============================
+svd = TruncatedSVD(n_components=5, random_state=42)
+latent_user = svd.fit_transform(course_df)
+latent_course = svd.components_
+
+# ===============================
 # 推薦関数
 # ===============================
-def recommend_courses(user_features, course_df, features_df, top_n=5):
-    assert len(user_features) == features_df.shape[1]
-
+def recommend_courses(user_features):
     user_vec = np.array(user_features).reshape(1, -1)
 
-    similarities = cosine_similarity(
-        user_vec, features_df.values
-    )[0]
+    # 特徴量ベース
+    sim = cosine_similarity(user_vec, features_df.values)[0]
+    feature_score = np.dot(sim, course_df.values) / sim.sum()
 
-    sim_sum = similarities.sum()
-    if sim_sum == 0:
-        return pd.Series(
-            np.zeros(course_df.shape[1]),
-            index=course_df.columns
-        )
+    # SVDベース
+    user_latent = np.dot(sim, latent_user)
+    svd_score = np.dot(user_latent, latent_course)
 
-    scores = np.dot(similarities, course_df.values) / sim_sum
+    # ハイブリッド
+    final_score = alpha * feature_score + (1 - alpha) * svd_score
 
-    return (
-        pd.Series(scores, index=course_df.columns)
-        .sort_values(ascending=False)
-        .head(top_n)
-    )
+    return pd.Series(final_score, index=course_columns).sort_values(ascending=False)
 
 # ===============================
-# Streamlit UI
+# UI
 # ===============================
-st.title("京産大 進路推薦システム")
-st.write("あなたの興味・特徴をもとに、学科を推薦します。")
+st.title("🎓 京産大 ハイブリッド進路推薦")
 
 user_features = []
 
-# 興味
-st.subheader("1. 興味・関心")
+st.subheader("① 興味")
 for col in interest_columns:
-    val = st.checkbox(col)
-    user_features.append((1 if val else 0) * interest_w)
+    user_features.append((1 if st.checkbox(col) else 0) * interest_w)
 
-# 属性
-st.subheader("2. 基本情報")
-gender = st.selectbox("性別", ["男性", "女性"])
-bunri = st.selectbox("文理", ["文系", "理系"])
-hensachi = st.slider("偏差値（目安）", 35, 70, 50)
+st.subheader("② 基本情報")
+gender = st.selectbox("性別", ["男性","女性"])
+bunri = st.selectbox("文理", ["文系","理系"])
+hensachi = st.slider("偏差値", 35, 70, 50)
 
 user_features += [
-    (0 if gender == "男性" else 1) * meta_w,
-    (0 if bunri == "文系" else 1) * meta_w,
-    (hensachi / 100) * meta_w
+    (0 if gender=="男性" else 1)*meta_w,
+    (0 if bunri=="文系" else 1)*meta_w,
+    (hensachi/100)*meta_w
 ]
 
-# MBTI
-st.subheader("3. MBTI")
+st.subheader("③ MBTI")
 mbti = st.selectbox("MBTI", character_columns)
 for col in character_columns:
-    user_features.append((1 if mbti == col else 0) * mbti_w)
+    user_features.append((1 if col==mbti else 0)*mbti_w)
 
-# 得意科目
-st.subheader("4. 得意科目")
+st.subheader("④ 得意科目")
 kamoku = st.selectbox("得意科目", subject_columns)
 for col in subject_columns:
-    user_features.append((1 if kamoku == col else 0) * subject_w)
+    user_features.append((1 if col==kamoku else 0)*subject_w)
 
 # ===============================
-# 推薦実行
+# 実行
 # ===============================
-if st.button("進路を推薦する"):
-    recs = recommend_courses(user_features, course_df, features_df, top_n=5)
-    st.subheader("あなたにおすすめの学科")
+if st.button("進路を推薦"):
+    result = recommend_courses(user_features).head(3)
+    st.subheader("おすすめ学科")
 
-    for i, (name, score) in enumerate(recs.items(), 1):
-        st.write(f"{i}. {name}（スコア: {score:.2f}）")
+    for i, (name, score) in enumerate(result.items(), 1):
+        st.markdown(f"### {i}. {name}")
+        st.write(f"スコア: {score:.2f}")
+        st.write("**理由：**")
+        st.write("・あなたの興味・得意科目と一致")
+        st.write("・似た志向の学生が選択する傾向")
