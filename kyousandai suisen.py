@@ -68,13 +68,21 @@ svd = TruncatedSVD(n_components=5, random_state=42)
 latent_user = svd.fit_transform(course_df)
 latent_course = svd.components_
 
+def svd_score():
+    user_latent = latent_user.mean(axis=0)
+    svd_scores = np.dot(user_latent, latent_course)
+    return pd.Series(svd_scores, index=course_columns)
+
 # ===============================
 # 推薦関数
 # ===============================
 def recommend_courses(user_features, bunri, top_n=5):
+    # =========================
+    # 特徴量ベースCF
+    # =========================
     user_vec = np.array(user_features).reshape(1, -1)
-
     user_vec = user_vec / (np.linalg.norm(user_vec) + 1e-8)
+
     X = features_df.values
     X = X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-8)
 
@@ -84,20 +92,33 @@ def recommend_courses(user_features, bunri, top_n=5):
     top_idx = np.argsort(similarities)[-top_k:]
     top_sim = similarities[top_idx]
 
-    scores = (
+    feature_score = (
         np.dot(top_sim, course_df.values[top_idx])
-        / top_sim.sum()
+        / (top_sim.sum() + 1e-8)
     )
 
-    score_series = pd.Series(scores, index=course_columns)
+    feature_score = pd.Series(feature_score, index=course_columns)
 
-    # ★ 文理フィルタ（核心）
+    # =========================
+    # SVDスコア
+    # =========================
+    svd_scores = svd_score()
+
+    # =========================
+    # ハイブリッド
+    # =========================
+    final_score = alpha * feature_score + (1 - alpha) * svd_scores
+
+    # =========================
+    # 文理フィルタ（最重要）
+    # =========================
     if bunri == "文系":
-        score_series = score_series[bunkei_courses]
+        final_score = final_score[bunkei_courses]
     else:
-        score_series = score_series[rikei_courses]
+        final_score = final_score[rikei_courses]
 
-    return score_series.sort_values(ascending=False).head(top_n)
+    return final_score.sort_values(ascending=False).head(top_n)
+
 
 # ===============================
 # UI
@@ -135,12 +156,13 @@ for col in subject_columns:
 # 実行
 # ===============================
 if st.button("進路を推薦"):
-    result = recommend_courses(user_features).head(3)
-    st.subheader("おすすめ学科")
+    result = recommend_courses(user_features, bunri, top_n=3)
 
+    st.subheader("おすすめ学科")
     for i, (name, score) in enumerate(result.items(), 1):
         st.markdown(f"### {i}. {name}")
         st.write(f"スコア: {score:.2f}")
         st.write("**理由：**")
-        st.write("・あなたの興味・得意科目と一致")
-        st.write("・似た志向の学生が選択する傾向")
+        st.write("・あなたの興味・得意科目と近い学生が多い")
+        st.write("・過去の進学傾向（SVD）を反映")
+
