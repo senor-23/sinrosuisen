@@ -65,9 +65,10 @@ def recommend_courses(user_features, course_df, features_df, top_n=5):
 st.title("京産大 進路推薦システム")
 st.write("あなたの関心や特徴から、最適な学科を推薦します。")
 
+st.subheader("1. 興味・関心のあるものを選んでください")
+
 user_features = []
 
-st.subheader("1. 興味・関心のあるものを選んでください")
 for col in interest_columns:
     val = st.checkbox(col, key=f"checkbox_{col}")
     user_features.append(1 if val else 0)
