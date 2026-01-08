@@ -29,9 +29,9 @@ rikei_courses = [
 interest_columns = ['旅行','読書','音楽','スポーツ','映画・ドラマ','ゲーム','アニメ・漫画']
 meta_columns = ['性別','文理','偏差値']
 character_columns = [
-    'ISTJ(ロジスティシャン)','ISFJ(擁護者)','INFJ(提唱者)','INTJ(建築家)',
+    'ISTJ(管理者)','ISFJ(擁護者)','INFJ(提唱者)','INTJ(建築家)',
     'ISTP(巨匠)','ISFP(冒険家)','INFP(仲介者)','INTP(論理学者)',
-    'ESTP(起業家)','ESFP(エンターテイナー)','ENFP(運動家)','ENTP(討論者)',
+    'ESTP(起業家)','ESFP(エンターテイナー)','ENFP(広報活動家)','ENTP(討論者)',
     'ESTJ(幹部)','ESFJ(領事)','ENFJ(主人公)','ENTJ(指揮官)'
 ]
 subject_columns = ['国語','数学','英語','理科','社会']
