@@ -113,6 +113,16 @@ def recommend_courses(user_features, bunri, top_n=5):
 
     return final_score.sort_values(ascending=False).head(top_n)
 
+# 学部ごとの平均を計算
+faculty_mean = course_df.groupby(faculty_map, axis=1).mean()
+
+# 学部平均との差を引く
+course_debiased = course_centered.copy()
+for course in course_centered.columns:
+    faculty = faculty_map[course]
+    course_debiased[course] -= faculty_mean[faculty]
+
+
 # ===============================
 # UI
 # ===============================
