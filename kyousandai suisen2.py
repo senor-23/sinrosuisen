@@ -113,13 +113,6 @@ def recommend_courses(user_features, bunri, top_n=3):
         for col in cols:
             score[col] -= faculty_mean[faculty]
 
-    # 文理フィルタ
-    if bunri == "文系":
-        score = score[bunkei_courses]
-    else:
-        score = score[rikei_courses]
-
-    return score.sort_values(ascending=False).head(top_n)
 
 # ===============================
 # UI
