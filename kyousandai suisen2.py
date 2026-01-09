@@ -93,10 +93,7 @@ def recommend_courses(user_features, bunri, top_n=3):
 
     similarities = cosine_similarity(user_vec, X)[0]
 
-    # 満足度で重み付け
-    satisfaction = df["満足度"].values
-    satisfaction_weight = satisfaction / satisfaction.max()
-    weighted_sim = similarities * satisfaction_weight
+
 
     top_k = 50
     top_idx = np.argsort(weighted_sim)[-top_k:]
