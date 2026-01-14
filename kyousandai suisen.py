@@ -174,6 +174,6 @@ if st.button("進路を推薦"):
         st.markdown(f"### {i}. {name}")
         st.write(f"スコア: {score:.2f}")
         st.write("**理由：**")
-        st.write("・あなたの興味・得意科目と近い学生が多い")
-        st.write("・過去の進学傾向（SVD）を反映")
+        st.write("・興味・得意科目・性格があなたと近く、進学後の満足度が高かった先輩の進路を参考にしています")
+       
 
