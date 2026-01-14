@@ -46,7 +46,7 @@ subject_w  = st.sidebar.slider("得意科目の重視度", 0.0, 10.0, 5.0)
 mbti_w     = st.sidebar.slider("性格タイプの重視度", 0.0, 10.0, 5.0)
 meta_w     = st.sidebar.slider("基本属性の重視度", 0.0, 10.0, 5.0)
 
-alpha = st.sidebar.slider("個人特性の重視度", 0.0, 10.0, 10.0)
+alpha = st.sidebar.slider("個人特性の重視度", 0.0, 1.0, 1.0)
 st.sidebar.caption("← 先輩の進路傾向　｜　あなたの特徴 →")
 
 
