@@ -41,6 +41,8 @@ subject_columns = ['国語','数学','英語','理科','社会']
 # ===============================
 st.sidebar.title("⚙ おすすめ条件の調整")
 
+st.sidebar.caption("※ 0にするとその要素は推薦に使われません")
+
 interest_w = st.sidebar.slider("興味・関心の重視度", 0.0, 10.0, 5.0)
 subject_w  = st.sidebar.slider("得意科目の重視度", 0.0, 10.0, 5.0)
 mbti_w     = st.sidebar.slider("性格タイプの重視度", 0.0, 10.0, 5.0)
