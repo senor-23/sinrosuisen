@@ -39,12 +39,16 @@ subject_columns = ['国語','数学','英語','理科','社会']
 # ===============================
 # UI：重み調整
 # ===============================
-st.sidebar.title("⚙ 重み調整")
-interest_w = st.sidebar.slider("興味の重み", 0.5, 5.0, 5.0)
-subject_w = st.sidebar.slider("得意科目の重み", 0.5, 8.0, 8.0)
-mbti_w = st.sidebar.slider("MBTIの重み", 0.5, 5.0, 5.0)
-meta_w = st.sidebar.slider("属性の重み", 0.1, 2.0, 2.0)
-alpha = st.sidebar.slider("特徴量 vs SVD", 0.0, 1.0, 1.0)
+st.sidebar.title("⚙ おすすめ条件の調整")
+
+interest_w = st.sidebar.slider("興味・関心の重視度", 0.5, 5.0, 5.0)
+subject_w  = st.sidebar.slider("得意科目の重視度", 0.5, 8.0, 8.0)
+mbti_w     = st.sidebar.slider("性格タイプの重視度", 0.5, 5.0, 5.0)
+meta_w     = st.sidebar.slider("基本属性の重視度", 0.1, 2.0, 2.0)
+
+alpha = st.sidebar.slider("個人特性の重視度", 0.0, 1.0, 1.0)
+st.sidebar.caption("← 先輩の進路傾向　｜　あなたの特徴 →")
+
 
 # ===============================
 # データ分割
