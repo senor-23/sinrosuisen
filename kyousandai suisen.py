@@ -44,9 +44,9 @@ st.sidebar.title("⚙ おすすめ条件の調整")
 st.sidebar.caption("※ 0にするとその要素は推薦に使われません")
 
 interest_w = st.sidebar.slider("興味・関心の重視度", 0.0, 10.0, 5.0)
-subject_w  = st.sidebar.slider("得意科目の重視度", 0.0, 10.0, 5.0)
+subject_w  = st.sidebar.slider("基本属性の重視度", 0.0, 10.0, 5.0)
 mbti_w     = st.sidebar.slider("性格タイプの重視度", 0.0, 10.0, 5.0)
-meta_w     = st.sidebar.slider("基本属性の重視度", 0.0, 10.0, 5.0)
+meta_w     = st.sidebar.slider("得意科目の重視度", 0.0, 10.0, 5.0)
 
 alpha = st.sidebar.slider("個人特性の重視度", 0.0, 1.0, 1.0)
 st.sidebar.caption("← 先輩の進路傾向　｜　あなたの特徴 →")
@@ -144,7 +144,7 @@ st.subheader("① 興味")
 for col in interest_columns:
     user_features.append((1 if st.checkbox(col) else 0) * interest_w)
 
-st.subheader("② 基本情報")
+st.subheader("② 基本属性")
 gender = st.selectbox("性別", ["男性","女性"])
 bunri = st.selectbox("文理", ["文系","理系"])
 hensachi = st.slider("偏差値", 35, 70, 50)
